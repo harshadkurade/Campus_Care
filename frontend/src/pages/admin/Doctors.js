@@ -22,42 +22,75 @@ const Doctors = () => {
   };
 
   // handle account
-  const handleAccountStatus = async (record, status) => {
-    try {
-      const res = await axios.post(
-        "/api/v1/admin/changeAccountStatus",
-        { doctorId: record._id, userId: record.userId, status: status },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-    //   if (res.data.success) {
-    //     message.success(res.data.message);
-    //     window.location.reload();
-    //   }
+  // const handleAccountStatus = async (record, status) => {
+  //   try {
+  //     const res = await axios.post(
+  //       "/api/v1/admin/changeAccountStatus",
+  //       { doctorId: record._id, userId: record.userId, status: status },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //         },
+  //       }
+  //     );
+  //   //   if (res.data.success) {
+  //   //     message.success(res.data.message);
+  //   //     window.location.reload();
+  //   //   }
+  //   if (res.data.success) {
+  //     message.success(res.data.message);
+  //     // update the status locally
+  //     setDoctors((prev) =>
+  //       prev.map((doc) =>
+  //         doc._id === record._id ? { ...doc, status: status } : doc
+  //       )
+  //     );
+  //   } else {
+  //     message.error(res.data.message);
+  //   }
+  //   } catch (error) {
+  //     message.error("Something Went Wrong");
+  //   }
+  // };
+  // handle account
+
+const handleAccountStatus = async (record, status) => {
+  try {
+    const res = await axios.post(
+      "/api/v1/admin/changeAccountStatus",
+      { 
+        doctorId: record.id, // Send only userId, not doctorId
+        status: status 
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    
     if (res.data.success) {
       message.success(res.data.message);
-      // update the status locally
+      // Update the status locally
       setDoctors((prev) =>
         prev.map((doc) =>
-          doc._id === record._id ? { ...doc, status: status } : doc
+          doc.userId === record.userId ? { ...doc, status: status } : doc
         )
       );
     } else {
       message.error(res.data.message);
     }
-    } catch (error) {
-      message.error("Something Went Wrong");
-    }
-  };
+  } catch (error) {
+    message.error("Something Went Wrong");
+    console.error("Error:", error.response?.data || error.message);
+  }
+};
 
   useEffect(() => {
     getDoctors();
   }, []);
 
-  const columns = [
+const columns = [
     {
       title: "Name",
       dataIndex: "name",

@@ -23,6 +23,7 @@ const [isAvailable, setIsAvailable] = useState(false); // ✅ moved up
 useEffect(() => {
   console.log("Availability changed to:", isAvailable); // ✅ now safe to use
 }, [isAvailable]);
+
 useEffect(() => {
   if (!date || !time) {
     setIsAvailable(false);
@@ -40,7 +41,7 @@ const dispatch = useDispatch();
     try {
       const res = await axios.post(
         "/api/v1/doctor/getDoctorById",
-        { doctorId: params.doctorId },
+        { doctorId: Number(params.doctorId) },
         {
           headers: {
             Authorization: "Bearer " + localStorage.getItem("token"),
@@ -54,6 +55,8 @@ const dispatch = useDispatch();
       console.log(error);
     }
   };
+
+  
   // ============ handle availiblity
   // const handleAvailability = async () => {
   //   try {
@@ -116,38 +119,83 @@ const handleAvailability = async () => {
 
 
   // =============== booking func
+
+  // const handleBooking = async () => {
+  //   try {
+  //     setIsAvailable(true);
+  //     if (!date && !time) {
+  //       return alert("Date & Time Required");
+  //     }
+  //     dispatch(showLoading());
+  //     const res = await axios.post(
+  //       "/api/v1/user/book-appointment",
+  //       {
+  //         doctorId: Number(params.doctorId),
+  //         userId: user.id,
+  //         // doctorInfo: doctors,
+  //         // userInfo: user,
+  //         doctorInfo: JSON.stringify(doctors),
+  //         userInfo: JSON.stringify(user),
+  //         date: date,
+  //         time: time,
+  //       },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //         },
+  //       }
+  //     );
+  //     dispatch(hideLoading());
+  //     if (res.data.success) {
+  //       message.success(res.data.message);
+  //     }
+  //   } catch (error) {
+  //     dispatch(hideLoading());
+  //     console.log(error);
+  //   }
+  // };
   const handleBooking = async () => {
-    try {
-      setIsAvailable(true);
-      if (!date && !time) {
-        return alert("Date & Time Required");
-      }
-      dispatch(showLoading());
-      const res = await axios.post(
-        "/api/v1/user/book-appointment",
-        {
-          doctorId: params.doctorId,
-          userId: user._id,
-          doctorInfo: doctors,
-          userInfo: user,
-          date: date,
-          time: time,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      dispatch(hideLoading());
-      if (res.data.success) {
-        message.success(res.data.message);
-      }
-    } catch (error) {
-      dispatch(hideLoading());
-      console.log(error);
+  try {
+    if (!date || !time) {
+      return message.warning("Date & Time are required");
     }
-  };
+
+    dispatch(showLoading());
+    const res = await axios.post(
+      "/api/v1/user/book-appointment",
+      {
+        doctorId: Number(params.doctorId),
+        userId: user.id,
+        doctorInfo: JSON.stringify(doctors),
+        userInfo: JSON.stringify(user),
+        date,
+        time,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    dispatch(hideLoading());
+
+    if (res.data.success) {
+      message.success(res.data.message);
+    } else {
+      message.error(res.data.message || "Booking failed");
+    }
+  } catch (error) {
+    dispatch(hideLoading());
+
+    // 👇 catch the backend concurrency error here
+    if (error.response && error.response.data) {
+      message.error(error.response.data.message || "Slot not available");
+    } else {
+      message.error("Something went wrong while booking");
+    }
+  }
+};
+
 
   useEffect(() => {
     getUserData();
